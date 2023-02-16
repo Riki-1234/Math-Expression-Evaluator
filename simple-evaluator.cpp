@@ -160,6 +160,9 @@ void addMissingMultiplication(std::string& expression) {
         if (std::isdigit(expression[i]) && expression[i + 1] == '(') {
             expression.insert(expression.begin() + (i + 1), '*');
         }
+        else if (expression[i] == ')' && std::isdigit(expression[i + 1])) {
+            expression.insert(expression.begin() + (i + 1), '*');
+        }
     }
 }
 
