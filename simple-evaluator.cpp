@@ -238,7 +238,14 @@ void shuntingYardAlgorithm(std::string& expression, std::stack<std::string>& ope
             operators.pop();
         }
         else if (expression[i] == '^') {
-            operators.push(std::string(1, expression[i]));
+            if (isTopHighPrecedenceOperator(operators)) {
+                operands.push(operators.top());
+                operators.pop();
+                operators.push(std::string(1, expression[i]));
+            }
+            else {
+                operators.push(std::string(1, expression[i]));
+            }
         }
         else if (isSquareCubicRoot(expression, i) || isSquareCubicRoot(expression, i + 1) && expression[i] == 'n') {
             lexSqrtCbrt(expression, i, operands, operators);
