@@ -40,6 +40,13 @@ bool isOperatorNoMinus(const std::string& expression, size_t i) {
     return (expression[i] == '+' || expression[i] == '*' || expression[i] == '/' || expression[i] == '^' || expression[i] == '%');
 }
 
+bool isMissingMultiplication(const std::string& expression, size_t i) {
+    return (std::isdigit(expression[i]) && expression[i + 1] == '(' 
+            || expression[i] == ')' && std::isdigit(expression[i + 1]) 
+            || expression[i] == ')' && expression[i + 1] == '('
+            || expression[i] == '%' && expression[i + 1] == '(');
+}
+
 void lexMultiplicationAndDivision(const std::string& expression, int i, std::stack<std::string>& operands, std::stack<std::string>& operators) {
     if (operators.size() > 0) {
         if (isTopOperator(operators) || operators.top() == "*" || operators.top() == "/") {
@@ -158,10 +165,7 @@ void replacePercentWithDivision(std::string& expression) {
 
 void addMissingMultiplication(std::string& expression) {
     for (int i = 0; i < expression.size(); i++) {
-        if (std::isdigit(expression[i]) && expression[i + 1] == '(') {
-            expression.insert(expression.begin() + (i + 1), '*');
-        }
-        else if (expression[i] == ')' && std::isdigit(expression[i + 1])) {
+        if (isMissingMultiplication(expression, i)) {
             expression.insert(expression.begin() + (i + 1), '*');
         }
     }
