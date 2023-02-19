@@ -10,15 +10,15 @@ To understand how to use the functions listed below, open up the examples folder
 
 **Functions:**
 
-**bool checkSyntax(std::string expression)**
+**`bool checkSyntax(std::string expression)`**
 
-**double evalExpr(std::string expression)**
+**`double evalExpr(std::string expression)`**
 
 ## C++17 & above
 
 **Functions:**
 
-**std::optional`<double>` evalExpr(std::string expression)**
+**`std::optional<double> evalExpr(std::string expression)`**
 
 ## Math Operators & Functions
  ## `+`
