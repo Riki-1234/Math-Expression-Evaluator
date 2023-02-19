@@ -18,7 +18,7 @@ To understand how to use the functions listed below, open up the examples folder
 
 **Functions:**
 
-**std::optional<double> evalExpr(std::string expression)**
+**std::optional`<double>` evalExpr(std::string expression)**
 
 ## Math Operators & Functions
  ## `+`
