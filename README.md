@@ -27,6 +27,7 @@ To understand how to use the functions listed below, open up the examples folder
  ## `*`
  ## `/`
  ## `%`
+ ## `()`
  ## `sqrt`
  ## `cbrt`
  ## `sin`
