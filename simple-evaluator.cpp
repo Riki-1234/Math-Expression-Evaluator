@@ -36,6 +36,10 @@ bool isOperator(const std::string& expression, size_t i) {
     return (expression[i] == '+' || expression[i] == '-' || expression[i] == '*' || expression[i] == '/' || expression[i] == '^' || expression[i] == '%');
 }
 
+bool isOperatorNoPercent(const std::string& expression, int i) {
+    return (expression[i] == '+' || expression[i] == '-' || expression[i] == '*' || expression[i] == '/' || expression[i] == '^');
+}
+
 bool isOperatorNoMinus(const std::string& expression, size_t i) {
     return (expression[i] == '+' || expression[i] == '*' || expression[i] == '/' || expression[i] == '^' || expression[i] == '%');
 }
@@ -430,7 +434,7 @@ namespace seval {
                 digitCounter++;
             }
         }
-        if (leftParenCounter != rightParenCounter || isOperator(expression, expression.length() - 1) || digitCounter == expression.length()) {
+        if (leftParenCounter != rightParenCounter || isOperatorNoPercent(expression, expression.length() - 1) || digitCounter == expression.length()) {
             return false;
         }
         return true;
