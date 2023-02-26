@@ -32,7 +32,7 @@ bool isAdditionMultiplicationDivision(const std::string& expression, int i) {
     return (expression[i] == '+' || expression[i] == '*' || expression[i] == '/');
 }
 
-bool isOperator(const std::string& expression, size_t i) {
+bool isOperator(const std::string& expression, int i) {
     return (expression[i] == '+' || expression[i] == '-' || expression[i] == '*' || expression[i] == '/' || expression[i] == '^' || expression[i] == '%');
 }
 
@@ -40,15 +40,37 @@ bool isOperatorNoPercent(const std::string& expression, int i) {
     return (expression[i] == '+' || expression[i] == '-' || expression[i] == '*' || expression[i] == '/' || expression[i] == '^');
 }
 
-bool isOperatorNoMinus(const std::string& expression, size_t i) {
+bool isOperatorNoMinus(const std::string& expression, int i) {
     return (expression[i] == '+' || expression[i] == '*' || expression[i] == '/' || expression[i] == '^' || expression[i] == '%');
 }
 
-bool isMissingMultiplication(const std::string& expression, size_t i) {
-    return (std::isdigit(expression[i]) && expression[i + 1] == '(' 
-            || expression[i] == ')' && std::isdigit(expression[i + 1]) 
-            || expression[i] == ')' && expression[i + 1] == '('
-            || expression[i] == '%' && expression[i + 1] == '(');
+bool isMissingMultiplication(const std::string& expression, int i) {
+    return (std::isdigit(expression[i]) && expression[i + 1] == '('
+        || expression[i] == ')' && std::isdigit(expression[i + 1])
+        || expression[i] == ')' && expression[i + 1] == '('
+        || expression[i] == '%' && expression[i + 1] == '(');
+}
+
+bool isPointlessExpression(const std::string& expression) {
+    int operatorCounter = 0;
+    for (int i = 0; i < expression.length(); i++) {
+        if (i != expression.length() - 1) {
+            if (expression[i] == '(' && expression[i + 1] == '-') {
+                if (i == 0) {
+                    i++;
+                }
+                i++;
+                continue;
+            }
+        }
+        if (isOperator(expression, i) || isSquareCubicRoot(expression, i) || isSinCosTan(expression, i)) {
+            operatorCounter++;
+        }
+    }
+    if (operatorCounter > 0) {
+        return false;
+    }
+    return true;
 }
 
 void lexMultiplicationAndDivision(const std::string& expression, int i, std::stack<std::string>& operands, std::stack<std::string>& operators) {
@@ -208,12 +230,39 @@ void eraseWhiteSpaces(std::string& expression) {
     for (int i = 0; i < expression.length(); i++) {
         if (expression[i] == ' ') {
             expression.erase(expression.begin() + i);
+            if (i == 0) {
+                i = -1;
+            }
+            else {
+                i--;
+            }
         }
     }
 }
 
-void shuntingYardAlgorithm(std::string& expression, std::stack<std::string>& operands, std::stack<std::string>& operators) {
+void eraseBrackets(std::string& expression) {
+    for (int i = 0; i < expression.length(); i++) {
+        if (expression[i] == '(' || expression[i] == ')') {
+            expression.erase(expression.begin() + i);
+            if (i == 1) {
+                i = 0;
+            }
+            else {
+                i--;
+            }
+        }
+    }
+}
+
+void shuntingYardAlgorithm(std::string& expression, std::stack<std::string>& operands, std::stack<std::string>& operators, std::vector<std::string>& sortedExpression, bool& isPointless) {
     eraseWhiteSpaces(expression);
+    if (isPointlessExpression(expression)) {
+        solveMultipleMinuses(expression);
+        eraseBrackets(expression);
+        sortedExpression.push_back(expression);
+        isPointless = true;
+        return;
+    }
     replacePercentWithDivision(expression);
     addMissingMultiplication(expression);
     solveMultipleMinuses(expression);
@@ -268,7 +317,7 @@ void shuntingYardAlgorithm(std::string& expression, std::stack<std::string>& ope
     }
 }
 
-void sortStack(std::stack<std::string>& operands, std::vector<std::string>& sortedExpression) {
+void sortExpression(std::stack<std::string>& operands, std::vector<std::string>& sortedExpression) {
     while (operands.size() != 0) {
         sortedExpression.push_back(operands.top());
         operands.pop();
@@ -388,7 +437,7 @@ void eraseUnnecessaryDecimals(std::vector<std::string>& sortedExpression) {
     sortedExpression[0] = expression;
 }
 
-int solvePointlessExpressions(std::string& expression, int& i) {
+int digitCountFunc(std::string& expression, int& i) {
     int digitCount = 0;
     if (std::isdigit(expression[i + 1]) || expression[i] == 'n' || expression[i + 1] == '.') {
         while (isDigit(expression, i)) {
@@ -406,14 +455,14 @@ int solvePointlessExpressions(std::string& expression, int& i) {
 
 namespace seval {
     bool checkSyntax(std::string expression) {
-        if(expression.empty()) {
+        if (expression.empty()) {
             return false;
         }
         if (isOperatorNoMinus(expression, 0)) {
             return false;
         }
 
-        size_t leftParenCounter = 0, rightParenCounter = 0, digitCounter = 0;
+        size_t leftParenCounter = 0, rightParenCounter = 0;
         for (int i = 0; i < expression.length(); i++) {
             if (isOperator(expression, i) && isOperator(expression, i + 1)) {
                 return false;
@@ -430,76 +479,50 @@ namespace seval {
             else if (expression[i] == ')') {
                 rightParenCounter++;
             }
-            else if (isDigit(expression, i)) {
-                digitCounter++;
-            }
         }
-        if (leftParenCounter != rightParenCounter || isOperatorNoPercent(expression, expression.length() - 1) || digitCounter == expression.length()) {
+        if (leftParenCounter != rightParenCounter || isOperatorNoPercent(expression, expression.length() - 1)) {
             return false;
         }
         return true;
     }
 }
-
 #if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
-std::optional<double> seval::evalExpr(std::string expression) {
-    std::optional<double> result;
-    if (expression.empty()) {
-        return result;
-    }
-
-    int operatorCount = 0, digitCount = 0;
-    for (int i = 0; i < expression.length(); i++) {
-        if (isAdditionMultiplicationDivision(expression, i) || isSquareCubicRoot(expression, i) || isSinCosTan(expression, i)) {
-            operatorCount++;
+    std::optional<double> seval::evalExpr(std::string expression) {
+        std::optional<double> result;
+        if (expression.empty()) {
+            return result;
         }
-        else if (std::isdigit(expression[i])) {
-            digitCount += solvePointlessExpressions(expression, i);
+        if (!seval::checkSyntax(expression)) {
+            return result;
         }
 
-    }
+        std::vector<std::string> sortedExpression;
+        std::stack<std::string> operands, operators;
+        bool isPointless = false;
+        shuntingYardAlgorithm(expression, operands, operators, sortedExpression, isPointless);
+        if (isPointless) {
+            return std::stod(sortedExpression[0]);
+        }
+        sortExpression(operands, sortedExpression);
+        calculateExpression(sortedExpression);
+        eraseUnnecessaryDecimals(sortedExpression);
 
-    if (operatorCount == 0 && digitCount == 1) {
-        result = std::stod(expression);
+        result = std::stod(sortedExpression[0]);
         return result;
     }
-
-    if (!seval::checkSyntax(expression)) {
-        return result;
-    }
-
-    std::vector<std::string> sortedExpression;
-    std::stack<std::string> operands, operators;
-    shuntingYardAlgorithm(expression, operands, operators);
-    sortStack(operands, sortedExpression);
-    calculateExpression(sortedExpression);
-    eraseUnnecessaryDecimals(sortedExpression);
-
-    result = std::stod(sortedExpression[0]);
-    return result;
-}
 #else
-double seval::evalExpr(std::string expression) {
-    int operatorCount = 0, digitCount = 0;
-    for (int i = 0; i < expression.length(); i++) {
-        if (isAdditionMultiplicationDivision(expression, i) || isSquareCubicRoot(expression, i) || isSinCosTan(expression, i)) {
-            operatorCount++;
+    double seval::evalExpr(std::string expression) {
+        std::vector<std::string> sortedExpression;
+        std::stack<std::string> operands, operators;
+        bool isPointless = false;
+        shuntingYardAlgorithm(expression, operands, operators, sortedExpression, isPointless);
+        if (isPointless) {
+            return std::stod(sortedExpression[0]);
         }
-        else if (std::isdigit(expression[i])) {
-            digitCount += solvePointlessExpressions(expression, i);
-        }
-    }
-    if (operatorCount == 0 && digitCount == 1) {
-        return std::stod(expression);
-    }
+        sortExpression(operands, sortedExpression);
+        calculateExpression(sortedExpression);
+        eraseUnnecessaryDecimals(sortedExpression);
 
-    std::vector<std::string> sortedExpression;
-    std::stack<std::string> operands, operators;
-    shuntingYardAlgorithm(expression, operands, operators);
-    sortStack(operands, sortedExpression);
-    calculateExpression(sortedExpression);
-    eraseUnnecessaryDecimals(sortedExpression);
-
-    return std::stod(sortedExpression[0]);
-}
+        return std::stod(sortedExpression[0]);
+    }
 #endif
