@@ -29,32 +29,42 @@ To understand how to use the functions listed below, open up the examples folder
  ### `/`
  ### `%`
  ### `^`
+
+### Root Functions
  
- ### `sqrt`
- ### `cbrt`
+ #### `sqrt`
+ #### `cbrt`
+
+### Trigonometric Functions
  
- ### `sin`
- ### `cos`
- ### `tan`
- ### `cot`
- ### `sec`
- ### `csc`
+ #### `sin`
+ #### `cos`
+ #### `tan`
+ #### `cot`
+ #### `sec`
+ #### `csc`
+
+### Hyperbolic Functions
  
- ### `sinh`
- ### `cosh`
- ### `tanh`
- ### `coth`
- ### `sech`
- ### `csch`
+ #### `sinh`
+ #### `cosh`
+ #### `tanh`
+ #### `coth`
+ #### `sech`
+ #### `csch`
+
+### Inverse Hyperbolic Functions
  
- ### `asinh`
- ### `acosh`
- ### `atanh`
- ### `acoth`
- ### `asech`
- ### `acsch`
+ #### `asinh`
+ #### `acosh`
+ #### `atanh`
+ #### `acoth`
+ #### `asech`
+ #### `acsch`
+
+### Logarithmic Functions
  
- ### `ln`
- ### `log`
- ### `log2`
- ### `exp`
+ #### `ln`
+ #### `log`
+ #### `log2`
+ #### `exp`
