@@ -90,7 +90,7 @@ bool isTopHighPrecedenceOperator(const stack_t operators) {
 }
 
 bool isDigit(const std::string& expr, int i) {
-    return (std::isdigit(expr[i]) || expr[i] == 'n' && !isFunction(expr, i + 1) && !isSquareCubicRoot(expr, i + 1) || expr[i] == '.');
+    return (std::isdigit(expr[i]) || expr[i] == 'q' && !isFunction(expr, i + 1) && !isSquareCubicRoot(expr, i + 1) || expr[i] == '.');
 }
 
 bool isBinaryOp(const std::string& expr, int i) {
@@ -142,9 +142,9 @@ void lexMultiplicationDivisionModulus(const std::string& expr, int i, stack_t op
 
 void lexNumbers(std::string& expr, int& i, stack_t operands, stack_t operators) {
     std::string multiDigitNum{};
-    if (std::isdigit(expr[i + 1]) || expr[i] == 'n' && !isFunction(expr, i + 1) && !isSquareCubicRoot(expr, i + 1) || expr[i + 1] == '.') {
+    if (std::isdigit(expr[i + 1]) || expr[i] == 'q' && !isFunction(expr, i + 1) && !isSquareCubicRoot(expr, i + 1) || expr[i + 1] == '.') {
         while (isDigit(expr, i)) {
-            if (expr[i] == 'n') {
+            if (expr[i] == 'q') {
                 expr.replace(i, 1, 1, '-');
             }
             multiDigitNum += std::string(1, expr[i]);
@@ -210,7 +210,7 @@ void lexFunction(std::string& expr, int& i, stack_t& operands, stack_t& operator
 
         pushFunctionToOps(expr, i, operators);
     }
-    else if (expr[i] == 'n') {
+    else if (expr[i] == 'q') {
         expr.replace(i, 1, 1, '-');
 
         pushFunctionToOps(expr, i, operators, true);
@@ -244,7 +244,7 @@ void lexSqrtCbrt(std::string& expr, int& i, stack_t& operands, stack_t& operator
         operators.pop();
         operators.push(expr.substr(i, 4));
     }
-    else if (expr[i] == 'n') {
+    else if (expr[i] == 'q') {
         expr.replace(i, 1, 1, '-');
         operators.push(expr.substr(i, 5));
     }
@@ -270,7 +270,7 @@ void lexPow(std::string& expr, int i, stack_t operands, stack_t operators) {
 void lexBrackets(char bracketType, std::string& expr, int i, stack_t operands, stack_t operators) {
     if (bracketType == '(') {
         if (expr[i + 1] == '-') {
-            expr.replace(i + 1, 1, 1, 'n');
+            expr.replace(i + 1, 1, 1, 'q');
         }
         operators.push(std::string(1, expr[i]));
     }
@@ -335,7 +335,7 @@ void shuntingYardAlgorithm(std::string& expr, stack_t operands, stack_t operator
     solveMultipleMinuses(expr);
 
     if (expr[0] == '-') {
-        expr.replace(0, 1, 1, 'n');
+        expr.replace(0, 1, 1, 'q');
     }
 
     for (int i = 0; i < expr.length(); i++) {
@@ -357,10 +357,10 @@ void shuntingYardAlgorithm(std::string& expr, stack_t operands, stack_t operator
         else if (expr[i] == '^') {
             lexPow(expr, i, operands, operators);
         }
-        else if (isSquareCubicRoot(expr, i) || isSquareCubicRoot(expr, i + 1) && expr[i] == 'n') {
+        else if (isSquareCubicRoot(expr, i) || isSquareCubicRoot(expr, i + 1) && expr[i] == 'q') {
             lexSqrtCbrt(expr, i, operands, operators);
         }
-        else if (isFunction(expr, i) || isFunction(expr, i + 1) && expr[i] == 'n') {
+        else if (isFunction(expr, i) || isFunction(expr, i + 1) && expr[i] == 'q') {
             lexFunction(expr, i, operands, operators);
         }
     }
@@ -384,8 +384,9 @@ void sortExpr(stack_t operands, vec_t sortedExpr) {
     }
 }
 
-void performUnaryOperation(vec_t sortedExpr, int& i, const std::function<double(double)>& unaryOperation) {
-    sortedExpr[i] = std::to_string(unaryOperation(std::stod(sortedExpr[i])));
+void performUnaryOperation(vec_t sortedExpr, int& i, const std::function<double(double)>& unaryOperation, bool isNegative = false) {
+    double result = unaryOperation(std::stod(sortedExpr[i]));
+    sortedExpr[i] = std::to_string(isNegative ? -result : result);
     sortedExpr.erase(sortedExpr.begin() + (i + 1));
 
     i = 0;
@@ -402,57 +403,33 @@ void performBinaryOperation(vec_t sortedExpr, int& i, const std::function<double
 void _calculateExpr(vec_t sortedExpr, int i) {
     static const std::map<std::string, std::function<double(double)>> unaryOperations = {
         {"sqrt", [](double x) { return std::sqrt(x); }},
-        {"-sqrt", [](double x) { return -std::sqrt(x); }},
         {"cbrt", [](double x) { return std::cbrt(x); }},
-        {"-cbrt", [](double x) { return -std::cbrt(x); }},
 
         {"sin", [](double x) { return std::sin(x); }},
-        {"-sin", [](double x) { return -std::sin(x); }},
         {"cos", [](double x) { return std::cos(x); }},
-        {"-cos", [](double x) { return -std::cos(x); }},
         {"tan", [](double x) { return std::tan(x); }},
-        {"-tan", [](double x) { return -std::tan(x); }},
         {"cot", [](double x) { return 1.00 / std::tan(x); }},
-        {"-cot", [](double x) { return -1.00 / std::tan(x); }},
         {"sec", [](double x) { return 1.00 / std::cos(x); }},
-        {"-sec", [](double x) { return -1.00 / std::cos(x); }},
         {"csc", [](double x) { return 1.00 / std::sin(x); }},
-        {"-csc", [](double x) { return -1.00 / std::sin(x); }},
 
         {"ln", [](double x) { return std::log(x); }},
-        {"-ln", [](double x) { return -std::log(x); }}, 
         {"log", [](double x) { return std::log10(x); }},
-        {"-log", [](double x) { return -std::log10(x); }}, 
         {"log2", [](double x) {return std::log2(x); }},
-        {"-log2", [](double x) {return -std::log2(x); }},
         {"exp", [](double x) { return std::exp(x); }},
-        {"-exp", [](double x) { return -std::exp(x); }},
 
         {"sinh", [](double x) { return std::sinh(x); }},
-        {"-sinh", [](double x) { return -std::sinh(x); }},
         {"cosh", [](double x) { return std::cosh(x); }},
-        {"-cosh", [](double x) { return -std::cosh(x); }},
         {"tanh", [](double x) { return std::tanh(x); }},
-        {"-tanh", [](double x) { return -std::tanh(x); }},
         {"coth", [](double x) { return 1.00 / std::tanh(x); }},
-        {"-coth", [](double x) { return -1.00 / std::tanh(x); }},
         {"sech", [](double x) { return 1.00 / std::cosh(x); }},
-        {"-sech", [](double x) { return -1.00 / std::cosh(x); }},
         {"csch", [](double x) { return 1.00 / std::sinh(x); }},
-        {"-csch", [](double x) { return -1.00 / std::sinh(x); }},
 
         {"asinh", [](double x) { return std::asinh(x); }},
-        {"-asinh", [](double x) { return -std::asinh(x); }},
         {"acosh", [](double x) { return std::acosh(x); }},
-        {"-acosh", [](double x) { return -std::acosh(x); }},
         {"atanh", [](double x) { return std::atanh(x); }},
-        {"-atanh", [](double x) { return -std::atanh(x); }},
         {"acoth", [](double x) { return 1.00 / std::atanh(x); }},
-        {"-acoth", [](double x) { return -1.00 / std::atanh(x); }},
         {"asech", [](double x) { return 1.00 / std::acosh(x); }},
-        {"-asech", [](double x) { return -1.00 / std::acosh(x); }},
-        {"acsch", [](double x) { return 1.00 / std::asinh(x); }},
-        {"-acsch", [](double x) { return -1.00 / std::asinh(x); }}
+        {"acsch", [](double x) { return 1.00 / std::asinh(x); }}
     };
 
     static const std::map<std::string, std::function<double(double, double)>> binaryOperations = {
@@ -465,9 +442,18 @@ void _calculateExpr(vec_t sortedExpr, int i) {
     };
 
     bool hasPerformedOperation = false;
+    std::string function;
+    bool isNegative = false;
+    if (sortedExpr[i + 1].length() > 1 && sortedExpr[i + 1][0] == '-') {
+        function = sortedExpr[i + 1].substr(1);
+        isNegative = true;
+    }
+    else {
+        function = sortedExpr[i + 1];
+    }
     for (const auto& unary : unaryOperations) {
-        if (sortedExpr[i + 1] == unary.first) {
-            performUnaryOperation(sortedExpr, i, unary.second);
+        if (function == unary.first) {
+            performUnaryOperation(sortedExpr, i, unary.second, isNegative);
             hasPerformedOperation = true;
             break;
         }
