@@ -22,13 +22,19 @@ To understand how to use the functions listed below, open up the examples folder
 **`std::optional<double> evalExpr(std::string expression)`**
 
 ## Math Operators & Functions
- ### `+/-`
- ### `+`
- ### `-`
- ### `*`
- ### `/`
- ### `%`
- ### `^`
+
+### Unary Plus And Negation Operators
+
+ #### `+/-`
+
+### Binary Operators
+ 
+ #### `+`
+ #### `-`
+ #### `*`
+ #### `/`
+ #### `%`
+ #### `^`
 
 ### Root Functions
  
