@@ -4,9 +4,10 @@ This library can be used for evaluating math expressions which are in form of st
 
 ### Keep in mind that the usage differs depending on the C++ version: 
 ### C++11 && C++14:
-#### You are required to manually check the syntax via the checkSyntax function as you might get the wrong return value if the syntax of the passed expression is invalid.
+#### In these versions you are required to manually check the syntax via the checkSyntax function as you might get the wrong return value if the syntax of the passed expression is invalid.
 ### C++17:
 #### The C++17 version has only the evalExpr function which both evaluates the expression and checks for the syntax.
+
 
 #### The namespace for all versions is **seval**
 
