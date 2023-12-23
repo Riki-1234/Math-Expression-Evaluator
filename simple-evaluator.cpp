@@ -31,6 +31,12 @@ bool compareCharToList(char ch, const std::initializer_list<char>& list) {
 }
 
 bool isSubstring(const std::string& expr, int i, const std::string& pattern) {
+    if (pattern.size() == 5 && expr.size() - (i + 1) < 5 
+     || pattern.size() == 4 && expr.size() - (i + 1) < 4 
+     || pattern.size() == 3 && expr.size() - (i + 1) < 3) {
+        return false;
+    }
+
     for (int j = 0; j < pattern.size(); j++) {
         if (expr[i + j] != pattern[j]) {
             return false;
@@ -43,28 +49,52 @@ bool isSquareCubicRoot(const std::string& expr, int i) {
     return (isSubstring(expr, i, "sq") || isSubstring(expr, i, "cb"));
 }
 
-bool isSinCosTan(const std::string& expr, int i) {
-    return (isSubstring(expr, i, "si") || isSubstring(expr, i, "co") || isSubstring(expr, i, "ta"));
+bool isLogarithmicFunction(const std::string& expr, int i) {
+    return (isSubstring(expr, i, "log") || isSubstring(expr, i, "ln") || isSubstring(expr, i, "exp"));
+}
+
+bool isTrigonometricFunction(const std::string& expr, int i) {
+    return (isSubstring(expr, i, "sin") || isSubstring(expr, i, "cos") || isSubstring(expr, i, "tan"));
+}
+
+bool isHyperbolicFunction(const std::string& expr, int i) {
+    return (isSubstring(expr, i, "sinh") || isSubstring(expr, i, "cosh") || isSubstring(expr, i, "tanh")
+        || isSubstring(expr, i, "coth") || isSubstring(expr, i, "sech") || isSubstring(expr, i, "csch"));
+}
+
+bool isInverseHyperbolicFunction(const std::string& expr, int i) {
+    return (isSubstring(expr, i, "asinh") || isSubstring(expr, i, "acosh") || isSubstring(expr, i, "atanh")
+        || isSubstring(expr, i, "acoth") || isSubstring(expr, i, "asech") || isSubstring(expr, i, "acsch"));
+}
+
+bool isFunction(const std::string& expr, int i) {
+    return (isLogarithmicFunction(expr, i) || isTrigonometricFunction(expr, i) || isHyperbolicFunction(expr, i) || isInverseHyperbolicFunction(expr, i));
+}
+
+bool isLn(const std::string& expr, int i) {
+    return isSubstring(expr, i, "ln");
+}
+
+bool isLog2(const std::string& expr, int i) {
+    return isSubstring(expr, i, "log2");
 }
 
 bool isTopHighPrecedenceOperator(const stack_t operators) {
-    return isTopOperatorEqualTo(operators, { "sqrt", "cbrt", "sin", "cos", "tan", "^" });
+    return isTopOperatorEqualTo(operators, 
+        { "sqrt", "cbrt", 
+          "sin", "cos", "tan", "cot", "sec", "csc", 
+          "log", "log2", "ln", "exp",
+          "sinh", "cosh", "tanh", "coth", "sech", "csch",
+          "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
+          "^"});
 }
 
 bool isDigit(const std::string& expr, int i) {
-    return (std::isdigit(expr[i]) || expr[i] == 'n' && !isSinCosTan(expr, i + 1) && !isSquareCubicRoot(expr, i + 1) || expr[i] == '.');
-}
-
-bool isAdditionMultiplicationDivision(const std::string& expr, int i) {
-    return compareCharToList(expr[i], { '+', '*', '/' });
+    return (std::isdigit(expr[i]) || expr[i] == 'n' && !isFunction(expr, i + 1) && !isSquareCubicRoot(expr, i + 1) || expr[i] == '.');
 }
 
 bool isBinaryOp(const std::string& expr, int i) {
     return compareCharToList(expr[i], { '+', '-', '*', '/', '^', '%' });
-}
-
-bool isBinaryOpNoPercent(const std::string& expr, int i) {
-    return compareCharToList(expr[i], { '+', '-', '*', '/', '^' });
 }
 
 bool isBinaryOpNoMinus(const std::string& expr, int i) {
@@ -72,10 +102,13 @@ bool isBinaryOpNoMinus(const std::string& expr, int i) {
 }
 
 bool isMissingMultiplication(const std::string& expr, int i) {
-    return (std::isdigit(expr[i]) && expr[i + 1] == '('
-        || expr[i] == ')' && std::isdigit(expr[i + 1])
-        || isSubstring(expr, i, ")(")
-        || isSubstring(expr, i, "%("));
+    if (i > 0) {
+        if (expr[i] == '2' && expr[i - 1] == 'g') {
+            return false;
+        }
+    }
+
+    return (std::isdigit(expr[i]) && expr[i + 1] == '(' || expr[i] == ')' && std::isdigit(expr[i + 1]) || isSubstring(expr, i, ")("));
 }
 
 bool isPointlessExpr(const std::string& expr) {
@@ -90,7 +123,7 @@ bool isPointlessExpr(const std::string& expr) {
                 continue;
             }
         }
-        if (isBinaryOp(expr, i) || isSquareCubicRoot(expr, i) || isSinCosTan(expr, i)) {
+        if (isBinaryOp(expr, i) || isSquareCubicRoot(expr, i) || isFunction(expr, i)) {
             operatorCounter++;
 
             return false;
@@ -99,8 +132,8 @@ bool isPointlessExpr(const std::string& expr) {
     return true;
 }
 
-void lexMultiplicationAndDivision(const std::string& expr, int i, stack_t operands, stack_t operators) {
-    if (isTopHighPrecedenceOperator(operators) || isTopOperatorEqualTo(operators, { "*", "/" })) {
+void lexMultiplicationDivisionModulus(const std::string& expr, int i, stack_t operands, stack_t operators) {
+    if (isTopHighPrecedenceOperator(operators) || isTopOperatorEqualTo(operators, { "*", "/", "%" })) {
         operands.push(operators.top());
         operators.pop();
     }
@@ -109,7 +142,7 @@ void lexMultiplicationAndDivision(const std::string& expr, int i, stack_t operan
 
 void lexNumbers(std::string& expr, int& i, stack_t operands, stack_t operators) {
     std::string multiDigitNum{};
-    if (std::isdigit(expr[i + 1]) || expr[i] == 'n' && !isSinCosTan(expr, i + 1) && !isSquareCubicRoot(expr, i + 1) || expr[i + 1] == '.') {
+    if (std::isdigit(expr[i + 1]) || expr[i] == 'n' && !isFunction(expr, i + 1) && !isSquareCubicRoot(expr, i + 1) || expr[i + 1] == '.') {
         while (isDigit(expr, i)) {
             if (expr[i] == 'n') {
                 expr.replace(i, 1, 1, '-');
@@ -125,8 +158,8 @@ void lexNumbers(std::string& expr, int& i, stack_t operands, stack_t operators) 
     }
 }
 
-void lexAdditionAndSubtraction(const std::string& expr, int i, stack_t operands, stack_t operators) {
-    if (isTopOperatorEqualTo(operators, { "*", "/" }) || isTopHighPrecedenceOperator(operators)) {
+void lexAdditionSubtraction(const std::string& expr, int i, stack_t operands, stack_t operators) {
+    if (isTopOperatorEqualTo(operators, { "*", "/", "%"}) || isTopHighPrecedenceOperator(operators)) {
         while (operators.size() != 0) {
             operands.push(operators.top());
             operators.pop();
@@ -139,25 +172,70 @@ void lexAdditionAndSubtraction(const std::string& expr, int i, stack_t operands,
     operators.push(std::string(1, expr[i]));
 }
 
-void lexSinCosTan(std::string& expr, int& i, stack_t& operands, stack_t& operators) {
-    if (isTopHighPrecedenceOperator(operators)) {
-        operands.push(operators.top());
-        operators.pop();
-        operators.push(expr.substr(i, 3));
+void pushFunctionToOps(const std::string& expr, int i, stack_t& operators, bool isNegative = false) {
+    if (isNegative) {
+        if (isLn(expr, i)) {
+            operators.push(expr.substr(i, 3));
+        }
+        else if (isLog2(expr, i) || isHyperbolicFunction(expr, i)) {
+            operators.push(expr.substr(i, 5));
+        }
+        else if (isInverseHyperbolicFunction(expr, i)) {
+            operators.push(expr.substr(i, 6));
+        }
+        else {
+            operators.push(expr.substr(i, 4));
+        }
     }
-    else if (expr[i] == 'n') {
-        expr.replace(i, 1, 1, '-');
-        operators.push(expr.substr(i, 4));
-    }
-    else if (i > 0) {
-        if (expr[i - 1] != '-') {
+    else {
+        if (isLn(expr, i)) {
+            operators.push(expr.substr(i, 2));
+        }
+        else if (isLog2(expr, i) || isHyperbolicFunction(expr, i)) {
+            operators.push(expr.substr(i, 4));
+        }
+        else if (isInverseHyperbolicFunction(expr, i)) {
+            operators.push(expr.substr(i, 5));
+        }
+        else {
             operators.push(expr.substr(i, 3));
         }
     }
-    else if (i == 0) {
-        operators.push(expr.substr(i, 3));
+}
+
+void lexFunction(std::string& expr, int& i, stack_t& operands, stack_t& operators) {
+    if (isTopHighPrecedenceOperator(operators)) {
+        operands.push(operators.top());
+        operators.pop();
+
+        pushFunctionToOps(expr, i, operators);
     }
-    i += 2;
+    else if (expr[i] == 'n') {
+        expr.replace(i, 1, 1, '-');
+
+        pushFunctionToOps(expr, i, operators, true);
+    }
+    else if (i > 0) {
+        if (expr[i - 1] != '-') {
+            pushFunctionToOps(expr, i, operators);
+        }
+    }
+    else if (i == 0) {
+        pushFunctionToOps(expr, i, operators);
+    }
+
+    if (isLn(expr, i)) {
+        i += 1;
+    }
+    else if (isLog2(expr, i) || isHyperbolicFunction(expr, i)) {
+        i += 3;
+    }
+    else if (isInverseHyperbolicFunction(expr, i)) {
+        i += 4;
+    }
+    else {
+        i += 2;
+    }
 }
 
 void lexSqrtCbrt(std::string& expr, int& i, stack_t& operands, stack_t& operators) {
@@ -207,15 +285,6 @@ void lexBrackets(char bracketType, std::string& expr, int i, stack_t operands, s
     }
 }
 
-void replacePercentWithDivision(std::string& expr) {
-    size_t percentIndex = expr.find('%');
-    while (percentIndex != std::string::npos) {
-        expr.replace(percentIndex, 1, "/100");
-
-        percentIndex = expr.find('%', percentIndex + 1);
-    }
-}
-
 void addMissingMultiplication(std::string& expr) {
     for (int i = 0; i < expr.size(); i++) {
         if (isMissingMultiplication(expr, i)) {
@@ -254,15 +323,14 @@ void solveMultipleMinuses(std::string& expr) {
 }
 
 void eraseWhiteSpaces(std::string& expr) {
-    expr.erase(std::remove_if(expr.begin(), expr.end(), [](char c) { return c == ' '; }), expr.end());
+    expr.erase(std::remove_if(expr.begin(), expr.end(), [](char ch) { return ch == ' '; }), expr.end());
 }
 
 void eraseBrackets(std::string& expr) {
-    expr.erase(std::remove_if(expr.begin(), expr.end(), [](char c) { return c == '(' || c == ')'; }), expr.end());
+    expr.erase(std::remove_if(expr.begin(), expr.end(), [](char ch) { return ch == '(' || ch == ')'; }), expr.end());
 }
 
 void shuntingYardAlgorithm(std::string& expr, stack_t operands, stack_t operators, vec_t sortedExpr) {
-    replacePercentWithDivision(expr);
     addMissingMultiplication(expr);
     solveMultipleMinuses(expr);
 
@@ -274,11 +342,11 @@ void shuntingYardAlgorithm(std::string& expr, stack_t operands, stack_t operator
         if (isDigit(expr, i)) {
             lexNumbers(expr, i, operands, operators);
         }
-        else if (compareCharToList(expr[i], {'+', '-'})) {
-            lexAdditionAndSubtraction(expr, i, operands, operators);
+        else if (compareCharToList(expr[i], { '+', '-' })) {
+            lexAdditionSubtraction(expr, i, operands, operators);
         }
-        else if (compareCharToList(expr[i], { '*', '/' })) {
-            lexMultiplicationAndDivision(expr, i, operands, operators);
+        else if (compareCharToList(expr[i], { '*', '/', '%' })) {
+            lexMultiplicationDivisionModulus(expr, i, operands, operators);
         }
         else if (expr[i] == '(') {
             lexBrackets('(', expr, i, operands, operators);
@@ -292,8 +360,8 @@ void shuntingYardAlgorithm(std::string& expr, stack_t operands, stack_t operator
         else if (isSquareCubicRoot(expr, i) || isSquareCubicRoot(expr, i + 1) && expr[i] == 'n') {
             lexSqrtCbrt(expr, i, operands, operators);
         }
-        else if (isSinCosTan(expr, i) || isSinCosTan(expr, i + 1) && expr[i] == 'n') {
-            lexSinCosTan(expr, i, operands, operators);
+        else if (isFunction(expr, i) || isFunction(expr, i + 1) && expr[i] == 'n') {
+            lexFunction(expr, i, operands, operators);
         }
     }
     while (operators.size() != 0) {
@@ -337,12 +405,54 @@ void _calculateExpr(vec_t sortedExpr, int i) {
         {"-sqrt", [](double x) { return -std::sqrt(x); }},
         {"cbrt", [](double x) { return std::cbrt(x); }},
         {"-cbrt", [](double x) { return -std::cbrt(x); }},
+
         {"sin", [](double x) { return std::sin(x); }},
         {"-sin", [](double x) { return -std::sin(x); }},
         {"cos", [](double x) { return std::cos(x); }},
         {"-cos", [](double x) { return -std::cos(x); }},
         {"tan", [](double x) { return std::tan(x); }},
-        {"-tan", [](double x) { return -std::tan(x); }}
+        {"-tan", [](double x) { return -std::tan(x); }},
+        {"cot", [](double x) { return 1.00 / std::tan(x); }},
+        {"-cot", [](double x) { return -1.00 / std::tan(x); }},
+        {"sec", [](double x) { return 1.00 / std::cos(x); }},
+        {"-sec", [](double x) { return -1.00 / std::cos(x); }},
+        {"csc", [](double x) { return 1.00 / std::sin(x); }},
+        {"-csc", [](double x) { return -1.00 / std::sin(x); }},
+
+        {"ln", [](double x) { return std::log(x); }},
+        {"-ln", [](double x) { return -std::log(x); }}, 
+        {"log", [](double x) { return std::log10(x); }},
+        {"-log", [](double x) { return -std::log10(x); }}, 
+        {"log2", [](double x) {return std::log2(x); }},
+        {"-log2", [](double x) {return -std::log2(x); }},
+        {"exp", [](double x) { return std::exp(x); }},
+        {"-exp", [](double x) { return -std::exp(x); }},
+
+        {"sinh", [](double x) { return std::sinh(x); }},
+        {"-sinh", [](double x) { return -std::sinh(x); }},
+        {"cosh", [](double x) { return std::cosh(x); }},
+        {"-cosh", [](double x) { return -std::cosh(x); }},
+        {"tanh", [](double x) { return std::tanh(x); }},
+        {"-tanh", [](double x) { return -std::tanh(x); }},
+        {"coth", [](double x) { return 1.00 / std::tanh(x); }},
+        {"-coth", [](double x) { return -1.00 / std::tanh(x); }},
+        {"sech", [](double x) { return 1.00 / std::cosh(x); }},
+        {"-sech", [](double x) { return -1.00 / std::cosh(x); }},
+        {"csch", [](double x) { return 1.00 / std::sinh(x); }},
+        {"-csch", [](double x) { return -1.00 / std::sinh(x); }},
+
+        {"asinh", [](double x) { return std::asinh(x); }},
+        {"-asinh", [](double x) { return -std::asinh(x); }},
+        {"acosh", [](double x) { return std::acosh(x); }},
+        {"-acosh", [](double x) { return -std::acosh(x); }},
+        {"atanh", [](double x) { return std::atanh(x); }},
+        {"-atanh", [](double x) { return -std::atanh(x); }},
+        {"acoth", [](double x) { return 1.00 / std::atanh(x); }},
+        {"-acoth", [](double x) { return -1.00 / std::atanh(x); }},
+        {"asech", [](double x) { return 1.00 / std::acosh(x); }},
+        {"-asech", [](double x) { return -1.00 / std::acosh(x); }},
+        {"acsch", [](double x) { return 1.00 / std::asinh(x); }},
+        {"-acsch", [](double x) { return -1.00 / std::asinh(x); }}
     };
 
     static const std::map<std::string, std::function<double(double, double)>> binaryOperations = {
@@ -350,21 +460,23 @@ void _calculateExpr(vec_t sortedExpr, int i) {
         {"-", std::minus<double>()},
         {"*", std::multiplies<double>()},
         {"/", std::divides<double>()},
-        {"^", [](double base, double exponent) { return std::pow(base, exponent); }}
+        {"%", [](double x, double y) { return std::fmod(x, y); }},
+        {"^", [](double base, double exponent) { return std::pow(base, exponent); }},
     };
 
     bool hasPerformedOperation = false;
-    for (const auto& binary : binaryOperations) {
-        if (sortedExpr[i + 2] == binary.first) {
-            performBinaryOperation(sortedExpr, i, binary.second);
+    for (const auto& unary : unaryOperations) {
+        if (sortedExpr[i + 1] == unary.first) {
+            performUnaryOperation(sortedExpr, i, unary.second);
             hasPerformedOperation = true;
             break;
         }
     }
+
     if (!hasPerformedOperation) {
-        for (const auto& unary : unaryOperations) {
-            if (sortedExpr[i + 1] == unary.first) {
-                performUnaryOperation(sortedExpr, i, unary.second);
+        for (const auto& binary : binaryOperations) {
+            if (sortedExpr[i + 2] == binary.first) {
+                performBinaryOperation(sortedExpr, i, binary.second);
                 hasPerformedOperation = true;
                 break;
             }
@@ -405,10 +517,7 @@ namespace seval {
         }
 
         for (int i = 0; i < expr.length() - 1; i++) {
-            if (isBinaryOpNoPercent(expr, i) && isBinaryOpNoPercent(expr, i + 1)) {
-                return false;
-            }
-            else if (isBinaryOpNoPercent(expr, i) && expr[i + 1] == '%') {
+            if (isBinaryOp(expr, i) && isBinaryOp(expr, i + 1)) {
                 return false;
             }
         }
@@ -431,7 +540,7 @@ namespace seval {
                 rightParenCounter++;
             }
         }
-        if (leftParenCounter != rightParenCounter || isBinaryOpNoPercent(expr, static_cast<int>(expr.length() - 1))) {
+        if (leftParenCounter != rightParenCounter || isBinaryOp(expr, static_cast<int>(expr.length() - 1))) {
             return false;
         }
         return true;
