@@ -2,7 +2,7 @@
 #include "simple-evaluator.h"
 
 int main() {
-	std::string expression = "(sqrt(3) + (4 * 2)) / (5 - 1)";
+	std::string expression = "asinh(10)";
 	auto evaluatedExpression = seval::evalExpr(expression);
 	if (evaluatedExpression) {
 		std::cout << "The result is: " << evaluatedExpression.value();
