@@ -10,24 +10,12 @@
 typedef std::stack<std::string>& stack_t;
 typedef std::vector<std::string>& vec_t;
 
-bool isTopOperatorEqualTo(const stack_t operators, const std::initializer_list<std::string>& operatorList) {
-    if (!operators.empty()) {
-        for (const auto& op : operatorList) {
-            if (operators.top() == op) {
-                return true;
-            }
-        }
-    }
-    return false;
+bool isTopOperatorEqualTo(const std::stack<std::string>& operators, const std::initializer_list<std::string>& operatorList) {
+    return !operators.empty() && std::find(operatorList.begin(), operatorList.end(), operators.top()) != operatorList.end();
 }
 
 bool compareCharToList(char ch, const std::initializer_list<char>& list) {
-    for (const auto& str : list) {
-        if (ch == str) {
-            return true;
-        }
-    }
-    return false;
+    return std::find(list.begin(), list.end(), ch) != list.end();
 }
 
 bool isSubstring(const std::string& expr, int i, const std::string& pattern) {
