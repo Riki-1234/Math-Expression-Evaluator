@@ -4,7 +4,7 @@
 
 int main() {
 	std::vector<std::pair<std::string, double>> expressions {
-		{"-sin(5) + 5", 0.958924}
+		{"sqrt(sin(10)^2)", 0}
 	};
 
     for (const auto& [expression, result] : expressions) {

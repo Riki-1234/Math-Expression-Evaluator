@@ -467,7 +467,7 @@ void _calculateExpr(vec_t sortedExpr, int i) {
         i++;
     }
 
-    while (sortedExpr.size() >= 3) {
+    while (sortedExpr.size() >= 2) {
         _calculateExpr(sortedExpr, i);
     }
 }
