@@ -68,7 +68,14 @@ bool isLog2(const std::string& expr, int i) {
 }
 
 bool isTopHighPrecedenceOperator(const stack_t operators) {
-    return isTopOperatorEqualTo(operators, 
+    auto operatorsTemp = operators;
+    if (!operators.empty()) {
+        if (operators.top()[0] == '-') {
+            operatorsTemp.top().erase(0, 1);
+        }
+    }
+
+    return isTopOperatorEqualTo(operatorsTemp, 
         { "sqrt", "cbrt", 
           "sin", "cos", "tan", "cot", "sec", "csc", 
           "log", "log2", "ln", "exp",
