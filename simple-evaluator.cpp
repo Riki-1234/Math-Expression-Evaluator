@@ -7,8 +7,8 @@
 #include <cmath>
 #include <algorithm>
 
-typedef std::stack<std::string>& stack_t;
-typedef std::vector<std::string>& vec_t;
+using stack_t = std::stack<std::string>&;
+using vec_t = std::vector<std::string>&;
 
 bool isTopOperatorEqualTo(const std::stack<std::string>& operators, const std::initializer_list<std::string>& operatorList) {
     return !operators.empty() && std::find(operatorList.begin(), operatorList.end(), operators.top()) != operatorList.end();
